@@ -28,15 +28,19 @@ import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -46,6 +50,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.InventoryHolder;
 
 import com.angelofdev.DoOdy.command.DoOdyCommandExecutor;
 import com.angelofdev.DoOdy.config.Configuration;
@@ -59,8 +64,10 @@ public class PlayerListener implements Listener {
 	public PlayerListener() {
 	}
 	List<String> deniedCommands = Configuration.config.getStringList("Denied.commands");
-	List<Integer> configDropList = Configuration.config.getIntegerList("Duty Deny Drops.whitelist");
-	List<Integer> configStorageDenied = Configuration.config.getIntegerList("Deny Storage.storage");
+	List<String> configDropList = Configuration.config.getStringList("Duty Deny Drops.whitelist");
+	List<String> configStorageDenied = Configuration.config.getStringList("Deny Storage.storage");
+	List<String> configDeniedBlocks = Configuration.config.getStringList("Denied Blocks.Place");
+	List<String> configDeniedItems = Configuration.config.getStringList("Denied Items.Place");
 
 	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
@@ -180,12 +187,12 @@ public class PlayerListener implements Listener {
 	public void onPlayerDropItem(PlayerDropItemEvent event) {
 		Player player = event.getPlayer();
 		String playerName = player.getName();
+		Item item = event.getItemDrop();
 		
 		if (Configuration.data.contains(playerName) && Configuration.config.getBoolean("Duty Deny Drops.enabled")) {
 			if (!(player.isOp() || player.hasPermission("doody.dropitems"))) {
-				Item item = event.getItemDrop();
-				int itemID = item.getItemStack().getTypeId();
-				if (!(configDropList.contains(itemID))) {
+				String itemName = item.getItemStack().getType().toString();
+				if (!(configDropList.contains(itemName))) {
 					String message = item.getItemStack().getType().name();
 					String itemname = message.toLowerCase();
 			
@@ -198,18 +205,15 @@ public class PlayerListener implements Listener {
 				}
 			} else {
 				if (Configuration.config.getBoolean("Debug.enabled")) {
-					Item item = event.getItemDrop();
-					int itemID = item.getItemStack().getTypeId();
-					String message = item.getItemStack().getType().name();
-					String itemname = message.toLowerCase();
-					if (configDropList.contains(itemID)) {
-						Debug.normal("<onPlayerDropItem> Warning! " + itemname + " is whitelisted in config.");
-						Debug.normal("<onPlayerDropItem> Warning! " + "Allowing " + playerName + " to drop " + itemname);
+					String itemName = item.getItemStack().getType().toString().toLowerCase();
+					if (configDropList.contains(itemName)) {
+						Debug.normal("<onPlayerDropItem> Warning! " + itemName + " is whitelisted in config.");
+						Debug.normal("<onPlayerDropItem> Warning! " + "Allowing " + playerName + " to drop " + itemName);
 					} else {
 						if (player.isOp()) {
-							Debug.normal("<onPlayerDropItem> Warning! " + playerName + " is OP -Allowing item drop, " + itemname);
+							Debug.normal("<onPlayerDropItem> Warning! " + playerName + " is OP -Allowing item drop, " + itemName);
 						} else if (player.hasPermission("doody.dropitems")) {
-							Debug.normal("<onPlayerDropItem> Warning! " + playerName + " has doody.dropitems -Allowing item drop, " + itemname);
+							Debug.normal("<onPlayerDropItem> Warning! " + playerName + " has doody.dropitems -Allowing item drop, " + itemName);
 						} else {
 							//It should not have reached here
 							Debug.severe("<onPlayerDropItem> Another plugin may be causing a conflict. DoOdy Debug cannot make sense.");
@@ -229,27 +233,86 @@ public class PlayerListener implements Listener {
 			
 			if (Configuration.data.contains(playerName) && Configuration.config.getBoolean("Deny Storage.enabled")) {
 				Block block = event.getClickedBlock();
-				int blockID = block.getType().getId();
+				Material blockMat = block.getType();
+				Material itemInMainHand = player.getInventory().getItemInMainHand().getType();
 				
-				Debug.check("<onPlayerInteract>" + playerName + " Right Clicked on " + blockID);
-				if (configStorageDenied.contains(blockID)) {
+				Debug.check("<onPlayerInteract>" + playerName + " Right Clicked on " + blockMat.name().toLowerCase());
+				Debug.check("<onPlayerInteract>" + playerName + " Holding " + itemInMainHand.name().toLowerCase() + " in main hand.");
+				if (configDeniedItems.contains(itemInMainHand.name().toLowerCase())) {
+					if (!(player.isOp() || player.hasPermission("doody.allowplace.item"))) {
+						event.setCancelled(true);
+						if (Configuration.config.getBoolean("Denied Items.messages")) {
+							player.sendMessage(ChatColor.RED + "There's no need to place " + ChatColor.YELLOW + itemInMainHand.name().toLowerCase() + ChatColor.RED + " things while on duty.");
+						}
+						return;
+					} else {
+						if (Configuration.config.getBoolean("Debug.enabled")) {
+							if (player.isOp()) {
+								Debug.normal("<onPlayerInteract> Warning! " + playerName + " is OP -Allowing place item");
+							} else if (player.hasPermission("doody.allowplace.item")) {
+								Debug.normal("<onPlayerInteract> Warning! " + playerName + " has doody.allowplace.item -Allowing place item");
+							} else if (!(configDeniedItems.contains(itemInMainHand.name().toLowerCase()))) {
+								Debug.normal("<onPlayerInteract> Warning! " + itemInMainHand.name() + " is not in 'Denied Items.Place' list -Allowing place item");
+							} else {
+								//It should not have reached here
+								Debug.severe("<onPlayerInteract> Another plugin may be causing a conflict. DoOdy Debug cannot make sense of it.");
+							}
+						}
+					}
+				}
+				if (configStorageDenied.contains(blockMat.name().toLowerCase())) {
 					if (!(player.isOp() || player.hasPermission("doody.storage"))) {
 						event.setCancelled(true);
 						if (Configuration.config.getBoolean("Deny Storage.messages")) {
 							player.sendMessage(ChatColor.RED + "There's no need to store things while on duty.");
 						}
-						Debug.check("<onPlayerInteract> " + playerName + " got denied storage interact. <Block :" + blockID + " is in Deny Storage list>");
+						Debug.check("<onPlayerInteract> " + playerName + " got denied storage interact. <Block :" + blockMat.name().toLowerCase() + " is in Deny Storage list>");
+						return;
 					} else {
 						if (Configuration.config.getBoolean("Debug.enabled")) {
 							if (player.isOp()) {
 								Debug.normal("<onPlayerInteract> Warning! " + playerName + " is OP -Allowing storage interact");
 							} else if (player.hasPermission("doody.storage")) {
 								Debug.normal("<onPlayerInteract> Warning! " + playerName + " has doody.storage -Allowing storage interact");
-							} else if (!(configStorageDenied.contains(blockID))) {
-								Debug.normal("<onPlayerInteract> Warning! " + block.getType().name().toLowerCase() + " is not in 'Deny Storage.storage' list -Allowing storage interact");
+							} else if (!(configStorageDenied.contains(blockMat.name().toLowerCase()))) {
+								Debug.normal("<onPlayerInteract> Warning! " + blockMat.name().toLowerCase() + " is not in 'Deny Storage.storage' list -Allowing storage interact");
 							} else {
 								//It should not have reached here
-								Debug.severe("<onPlayerInteract> Another plugin may be causing a conflict. DoOdy Debug cannot make sense.");
+								Debug.severe("<onPlayerInteract> Another plugin may be causing a conflict. DoOdy Debug cannot make sense of it.");
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onInventoryOpen(InventoryOpenEvent event) {
+		if (!(event.getInventory().getHolder() == null)) {
+			HumanEntity player = event.getPlayer();
+			String playerName = player.getName();
+			if (Configuration.data.contains(playerName) && Configuration.config.getBoolean("Deny Storage.enabled")) {
+				InventoryHolder holder = event.getInventory().getHolder();
+				Debug.check("<onInventoryOpen> holder = " + holder.toString());
+				if ((configStorageDenied.contains("craftmule") && holder.toString().toLowerCase().contains("mule")) 
+						|| (configStorageDenied.contains("crafthorse") && holder.toString().toLowerCase().contains("horse"))
+						|| (configStorageDenied.contains("craftminecarthopper") && holder.toString().toLowerCase().contains("hopper"))) {
+					if (!(player.isOp() || player.hasPermission("doody.storage"))) {
+						event.setCancelled(true);
+						if (Configuration.config.getBoolean("Deny Storage.messages")) {
+							player.sendMessage(ChatColor.RED + "There's no need to store things while on duty.");
+						}
+						Debug.check("<onInventoryOpen> Cancelled event player does not have &6doody.storage &fpermissions.");
+						return;
+					} else {
+						if (Configuration.config.getBoolean("Debug.enabled")) {
+							if (player.isOp()) {
+								Debug.normal("<onPlayerInteract> Warning! " + playerName + " is OP -Allowing storage interact");
+							} else if (player.hasPermission("doody.storage")) {
+								Debug.normal("<onPlayerInteract> Warning! " + playerName + " has doody.storage -Allowing storage interact");
+							} else if (!(configStorageDenied.contains(holder.toString()))) {
+								Debug.normal("<onPlayerInteract> Warning! " + holder.toString() + " is not in 'Deny Storage.storage' list -Allowing storage interact");
 							}
 						}
 					}
@@ -260,7 +323,7 @@ public class PlayerListener implements Listener {
 	
 	@EventHandler
 	public void onEntityInteract(PlayerInteractEntityEvent event) {
-		if (event.getRightClicked() instanceof StorageMinecart) {
+		if (event.getRightClicked() instanceof StorageMinecart || event.getRightClicked() instanceof HopperMinecart) {
 			Player player = event.getPlayer();
 			String playerName = player.getName();
 			
@@ -274,9 +337,9 @@ public class PlayerListener implements Listener {
 				} else {
 					if (Configuration.config.getBoolean("Debug.enabled")) {
 						if (player.isOp()) {
-							Debug.normal("<onEntityInteract> Warning! " + playerName + " is OP -Allowing storage interact");
+							Debug.normal("<onEntityInteract> Warning! " + playerName + " is OP - Allowing storage interact");
 						} else if (player.hasPermission("doody.storage")) {
-							Debug.normal("<onEntityInteract> Warning! " + playerName + " has doody.storage -Allowing storage interact");
+							Debug.normal("<onEntityInteract> Warning! " + playerName + " has doody.storage - Allowing storage interact");
 						} else {
 							//It should not have reached here
 							Debug.severe("<onEntityInteract> Another plugin may be causing a conflict. DoOdy Debug cannot make sense.");
