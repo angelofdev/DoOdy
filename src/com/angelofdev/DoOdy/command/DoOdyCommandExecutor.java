@@ -29,6 +29,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -62,6 +63,7 @@ public class DoOdyCommandExecutor implements CommandExecutor {
 	}
 	public static List<String> configDeniedWorlds = Configuration.config.getStringList("Denied.worlds");
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (cmd == Configuration.config.getStringList("")) {
@@ -156,7 +158,7 @@ public class DoOdyCommandExecutor implements CommandExecutor {
 						}
 					} else {
 						m.player(player, "&6[DoOdy] &eYou are not on duty.");
-						Debug.check("<on /dm back|L-160> " + playerName + " is not on duty.");
+						Debug.check("<on /dm back|L-162> " + playerName + " is not on duty.");
 					}
 				}
 			}
@@ -405,7 +407,6 @@ public class DoOdyCommandExecutor implements CommandExecutor {
 			//put player on creative mode.
 			player.setGameMode(GameMode.CREATIVE);
 			m.player(player, "&6[DoOdy] &aYou're now on Duty.");
-
 			//Give Duty Tools?
 			dutyItems(player);
 			
@@ -550,15 +551,13 @@ public class DoOdyCommandExecutor implements CommandExecutor {
 				ItemStack item = playerInv.getItem(i);
 								
 				if (item.getAmount() != 0) {
-					Short durab = item.getDurability();
-					
 					Configuration.data.set(playerName + ".Inventory." + i.toString() + ".stack", item);
-					Configuration.data.set(playerName + ".Inventory." + i.toString() + ".amount", item.getAmount());					
-					Configuration.data.set(playerName + ".Inventory." + i.toString() + ".durability", durab.intValue());
+					Configuration.data.set(playerName + ".Inventory." + i.toString() + ".amount", item.getAmount());
 					Configuration.data.save();
 				}
 			}
 		} catch(Exception e) {
+			Log.info("Could not save inventory");
 		}
 		
 		//Clear player inventory
@@ -577,26 +576,26 @@ public class DoOdyCommandExecutor implements CommandExecutor {
 				Integer size = player.getInventory().getSize();
 				Integer i = 0;
 				for(i=0; i < size; i++) {
-					ItemStack item = new ItemStack(0, 0);
+					ItemStack item = new ItemStack(Material.AIR,0);
 					if(Configuration.data.getInt(playerName + ".Inventory." + i.toString() + ".amount", 0) != 0) {
 						ItemStack stack = Configuration.data.getItemStack(playerName + ".Inventory." + i.toString() + ".stack");
 						Integer amount = Configuration.data.getInt(playerName + ".Inventory." + i.toString() + ".amount", 0);
-						Integer durability = Configuration.data.getInt(playerName + ".Inventory." + i.toString() + ".durability", 0);
 						
 						item.setType(stack.getType());
 						item.setItemMeta(stack.getItemMeta());
 						item.setAmount(amount);
-						item.setDurability(Short.parseShort(durability.toString()));
 						player.getInventory().setItem(i, item);
 					}
 				}
 				player.setLevel(Configuration.data.getInt(playerName + ".XP"));
 			} catch(Exception e) {
 				Log.severe("Failed Loading Player Inventory from file on /doody off");
+				return;
 			}
 		}
-		Configuration.data.set(playerName, null);
 		try {
+			Configuration.data.set(playerName, null);
+			Configuration.data.set(playerName + ".Location", null);
 			Configuration.data.save();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -609,15 +608,15 @@ public class DoOdyCommandExecutor implements CommandExecutor {
 		//Give Duty Tools?
 		if (Configuration.config.getBoolean("Duty Tools.enabled")) {
 			Inventory playerInv = player.getInventory();
-			playerInv.setItem(0, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 1"), 1, (short) 0));
-			playerInv.setItem(1, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 2"), 1, (short) 0));
-			playerInv.setItem(2, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 3"), 1, (short) 0));
-			playerInv.setItem(3, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 4"), 1, (short) 0));
-			playerInv.setItem(4, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 5"), 1, (short) 0));
-			playerInv.setItem(5, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 6"), 1, (short) 0));
-			playerInv.setItem(6, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 7"), 1, (short) 0));
-			playerInv.setItem(7, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 8"), 1, (short) 0));
-			playerInv.setItem(8, new ItemStack(Configuration.config.getInt("Duty Tools.items.slot 9"), 1, (short) 0));
+			playerInv.setItem(0, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 1").toUpperCase()), 1));
+			playerInv.setItem(1, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 2").toUpperCase()), 1));
+			playerInv.setItem(2, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 3").toUpperCase()), 1));
+			playerInv.setItem(3, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 4").toUpperCase()), 1));
+			playerInv.setItem(4, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 5").toUpperCase()), 1));
+			playerInv.setItem(5, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 6").toUpperCase()), 1));
+			playerInv.setItem(6, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 7").toUpperCase()), 1));
+			playerInv.setItem(7, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 8").toUpperCase()), 1));
+			playerInv.setItem(8, new ItemStack(Material.getMaterial(Configuration.config.getString("Duty Tools.items.slot 9").toUpperCase()), 1));
 		}
 	}
 	
@@ -657,7 +656,6 @@ public class DoOdyCommandExecutor implements CommandExecutor {
 		Location local = new Location(world, x, y, z, yaw, pitch);
 		player.teleport(local);
 
-		Configuration.data.set(playerName + ".Location", null);
 		try {
 			Configuration.data.save();
 		} catch (IOException e) {
