@@ -47,8 +47,8 @@ public class Config {
 		}
 		if(!Configuration.config.contains("Duty Deny Drops.whitelist")) {
 			Configuration.config.set("Duty Deny Drops.whitelist", Arrays.asList(
-					"#1",
-					"#3"));
+					"dirt",
+					"cobblestone"));
 		}
 		if(!Configuration.config.contains("Duty Deny Drops.messages")) {
 			Configuration.config.set("Duty Deny Drops.messages", true);
@@ -62,12 +62,19 @@ public class Config {
 		}
 		if(!Configuration.config.contains("Deny Storage.storage")) {
 			Configuration.config.set("Deny Storage.storage", Arrays.asList(
-					"23",
-					"54",
-					"61",
-					"62",
-					"95",
-					"130"));
+					"dispenser",
+					"dropper",
+					"chest",
+					"crafthorse",
+					"craftmule",
+					"craftminecarthopper",
+					"ender_chest",
+					"enchanting_table",
+					"furnace",
+					"hoppper",
+					"enchanting_table",
+					"lit_furnace",
+					"trapped_chest"));
 		}
 		//Blocks Placement/Break
 		if(!Configuration.config.contains("Denied Blocks.messages")) {
@@ -75,43 +82,57 @@ public class Config {
 		}
 		if(!Configuration.config.contains("Denied Blocks.Place")) {
 			Configuration.config.set("Denied Blocks.Place", Arrays.asList(
-					"46",
-					"7"));
+					"tnt",
+					"gold_ore",
+					"gold_block",
+					"iron_ore",
+					"iron_block",
+					"diamond_ore",
+					"diamond_block",
+					"bedrock"));
 		}
 		if(!Configuration.config.contains("Denied Blocks.Break")) {
 			Configuration.config.set("Denied Blocks.Break", Arrays.asList(
-					"7"));
+					"bedrock"));
+		}
+		//Items Placement
+		if(!Configuration.config.contains("Denied Items.messages")) {
+			Configuration.config.set("Denied Items.messages", true);
+		}
+		if(!Configuration.config.contains("Denied Items.Place")) {
+			Configuration.config.set("Denied Items.Place", Arrays.asList(
+					"tnt_minecart"));
 		}
 		//Duty Tools
 		if (!Configuration.config.contains("Duty Tools.enabled")) {
 			Configuration.config.set("Duty Tools.enabled", true);
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 1")) {
-			Configuration.config.set("Duty Tools.items.slot 1", 271);
+			Configuration.config.set("Duty Tools.items.slot 1", "wooden_axe");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 2")) {
-			Configuration.config.set("Duty Tools.items.slot 2", 270);
+			Configuration.config.set("Duty Tools.items.slot 2", "wooden_pickaxe");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 3")) {
-			Configuration.config.set("Duty Tools.items.slot 3", 345);
+			Configuration.config.set("Duty Tools.items.slot 3", "compass");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 4")) {
-			Configuration.config.set("Duty Tools.items.slot 4", 287);
+			Configuration.config.set("Duty Tools.items.slot 4", "string");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 5")) {
-			Configuration.config.set("Duty Tools.items.slot 5", 7);
+			Configuration.config.set("Duty Tools.items.slot 5", "bedrock");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 6")) {
-			Configuration.config.set("Duty Tools.items.slot 6", 0);
+			Configuration.config.set("Duty Tools.items.slot 6", "air");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 7")) {
-			Configuration.config.set("Duty Tools.items.slot 7", 0);
+			Configuration.config.set("Duty Tools.items.slot 7", "air");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 8")) {
-			Configuration.config.set("Duty Tools.items.slot 8", 0);
+			Configuration.config.set("Duty Tools.items.slot 8", "air");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 9")) {
-			Configuration.config.set("Duty Tools.items.slot 9", 0);
+			Configuration.config.set("Duty Tools.items.slot 9", "air");
 		}
 		if(!Configuration.config.contains("Debug.enabled")) {
 			Configuration.config.set("Debug.enabled", false);
