@@ -30,8 +30,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.HopperMinecart;
 import org.bukkit.entity.minecart.StorageMinecart;
@@ -44,6 +46,7 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -297,13 +300,16 @@ public class PlayerListener implements Listener {
 				Debug.check("<onInventoryOpen> holder = " + holder.toString());
 				if ((configStorageDenied.contains("craftmule") && holder.toString().toLowerCase().contains("mule")) 
 						|| (configStorageDenied.contains("crafthorse") && holder.toString().toLowerCase().contains("horse"))
-						|| (configStorageDenied.contains("craftminecarthopper") && holder.toString().toLowerCase().contains("hopper"))) {
+						|| (configStorageDenied.contains("craftminecarthopper") && holder.toString().toLowerCase().contains("hopper"))
+						|| (configStorageDenied.contains("craftblastfurnace") && holder.toString().toLowerCase().contains("blast"))
+						|| (configStorageDenied.contains("craftbarrel") && holder.toString().toLowerCase().contains("barrel"))
+						|| (configStorageDenied.contains("craftsmoker") && holder.toString().toLowerCase().contains("smoker"))) {
 					if (!(player.isOp() || player.hasPermission("doody.storage"))) {
 						event.setCancelled(true);
 						if (Configuration.config.getBoolean("Deny Storage.messages")) {
 							player.sendMessage(ChatColor.RED + "There's no need to store things while on duty.");
 						}
-						Debug.check("<onInventoryOpen> Cancelled event player does not have &6doody.storage &fpermissions.");
+						Debug.check("<onInventoryOpen> Cancelled event player does not have " + ChatColor.GOLD + "doody.storage " +ChatColor.WHITE + "permissions.");
 						return;
 					} else {
 						if (Configuration.config.getBoolean("Debug.enabled")) {
@@ -320,10 +326,40 @@ public class PlayerListener implements Listener {
 			}
 		}
 	}
+	@EventHandler
+	public void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent event) {
+		if (event.getRightClicked() instanceof ArmorStand) {
+			Player player = event.getPlayer();
+			String playerName = player.getName();
+			Debug.check("<onPlayerIneteractAtEntity | L326> " + playerName + " interacted with instance of " + event.getRightClicked().toString());
+			if (Configuration.data.contains(playerName) && (Configuration.config.getBoolean("Deny Storage.enabled"))) {
+				Debug.check("<onPlayerIneteractAtEntity | L326> player is on duty and deny storage is enabled");
+				if(!(player.isOp() || player.hasPermission("doody.storage"))) {
+					event.setCancelled(true);
+					if (Configuration.config.getBoolean("Deny Storage.messages")) {
+						player.sendMessage(ChatColor.RED + "There's no need to store things while on Duty.");
+					}
+				} else {
+					if (Configuration.config.getBoolean("Debug.enabled")) {
+						if (player.isOp()) {
+							Debug.normal("<onPlayerIneteractAtEntity> Warning! " + playerName + " is OP - Allowing storage interact");
+						} else if (player.hasPermission("doody.storage")) {
+							Debug.normal("<onPlayerIneteractAtEntity> Warning! " + playerName + " has doody.storage - Allowing storage interact");
+						} else {
+							//It should not have reached here
+							Debug.severe("<onPlayerIneteractAtEntity> Another plugin may be causing a conflict. DoOdy Debug cannot make sense.");
+						}
+					}
+				}
+			}
+		}
+	}
 	
 	@EventHandler
 	public void onEntityInteract(PlayerInteractEntityEvent event) {
-		if (event.getRightClicked() instanceof StorageMinecart || event.getRightClicked() instanceof HopperMinecart) {
+		if (event.getRightClicked() instanceof StorageMinecart 
+				|| event.getRightClicked() instanceof HopperMinecart 
+				|| event.getRightClicked() instanceof ItemFrame) {
 			Player player = event.getPlayer();
 			String playerName = player.getName();
 			
