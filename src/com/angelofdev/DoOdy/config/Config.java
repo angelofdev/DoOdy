@@ -64,10 +64,19 @@ public class Config {
 			Configuration.config.set("Deny Storage.storage", Arrays.asList(
 					"dispenser",
 					"dropper",
+					"loom",
+					"crafting_table",
+					"cartography_table",
+					"stonecutter",
+					"grindstone",
+					"fletching_table",
 					"chest",
 					"crafthorse",
 					"craftmule",
 					"craftminecarthopper",
+					"craftsmoker",
+					"craftblastfurnace",
+					"craftbarrel",
 					"ender_chest",
 					"enchanting_table",
 					"furnace",
@@ -117,7 +126,7 @@ public class Config {
 			Configuration.config.set("Duty Tools.items.slot 3", "compass");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 4")) {
-			Configuration.config.set("Duty Tools.items.slot 4", "string");
+			Configuration.config.set("Duty Tools.items.slot 4", "grass");
 		}
 		if (!Configuration.config.contains("Duty Tools.items.slot 5")) {
 			Configuration.config.set("Duty Tools.items.slot 5", "bedrock");
@@ -136,10 +145,6 @@ public class Config {
 		}
 		if(!Configuration.config.contains("Debug.enabled")) {
 			Configuration.config.set("Debug.enabled", false);
-		}
-		// Old Config cleanup stuff
-		if(Configuration.config.contains("Allow")) {
-			Configuration.config.set("Allow", null);
 		}
 	}
 }
